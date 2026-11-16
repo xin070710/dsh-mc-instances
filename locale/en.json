@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Minecraft instance manager",
+    "description": "Manage Minecraft mod-testing instances (run/<name>/) from the session's right sidebar: instances detected in the workspace and shown as PCL2-style cards, one-click start/stop for the client or server, mod toggles and jar import from the workspace, game and Gradle logs, create and delete, opening the game folder, and generated IntelliJ run configurations (.idea/runConfigurations/) so each instance appears in the IDE run dropdown. Open it from the “MC instances” tab in the right sidebar → the “Minecraft instance manager” card on the guide page, or the MC instances button in the session header. By default, “hide the entry when no nearby instances exist” is on: it scans the current workspace (including subdirectories) and its direct parent, hides the header button and the guide card, and stops auto-switching workspaces when neither has an MC project/instance. While every entry is hidden, press Ctrl+Alt+M (⌘⌥M on macOS) to open the panel, then turn auto-hide off from the gear “MC instance settings.” Disabling the plugin removes these entry points; it never edits project files and only writes run/, .idea/runConfigurations/, and launch logs under the project's logs/.",
+    "detail": "docs/DETAIL.md"
+  }
+}

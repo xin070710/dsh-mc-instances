@@ -1,0 +1,4 @@
+# 把 Minecraft 模组测试实例管理器挂进 DSH 组合。
+- insert:
+    - id: mc-instances
+      name: dsh-mc-instances

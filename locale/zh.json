@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "MC 实例管理器",
+    "description": "在会话右侧栏管理 Minecraft 模组测试实例（run/<名字>/）：自动检测工作区里的实例，用 PCL2 风格卡片展示，一键启动/停止客户端或服务端，开关 mod 并可从工作区导入 jar，查看游戏与 Gradle 日志，新建/删除实例、打开游戏目录，并生成 IntelliJ 运行配置（.idea/runConfigurations/），让每个实例出现在 IDE 运行下拉框里。入口：会话右侧栏的「MC 实例」tab → 指南页中的「MC 实例管理器」卡片，或会话头部的 MC 实例按钮。默认开启「附近没有实例时自动隐藏入口」：检测当前工作区（含子目录）与直接父目录，没有 MC 工程/实例时隐藏头部按钮和指南卡片，并停止自动切换工作区；入口全隐藏时按 Ctrl+Alt+M（macOS 为 ⌘⌥M）打开面板，再在齿轮里关闭自动隐藏。禁用插件后这些入口消失；它不会修改工程文件，只写 run/、.idea/runConfigurations/ 和工程的 logs/ 启动日志。",
+    "detail": "docs/DETAIL.md"
+  }
+}
