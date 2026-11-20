@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.6 — 2026-11-21
+
+- Filter/sort toolbar button with loader, MC version, running state, mod and multi-instance filters.
+- Default sort is MC version descending, with ascending/descending switching and version-number comparison.
+- Recently launched instances (last 24 hours, plus all running instances) are pinned in their own group at the top.
+- Dark-theme polish: primary button text, native option colors, shadows, and pinned-group accent use theme tokens.
+
 ## 1.0.5 — 2026-11-20
 
 - Detect standard Minecraft projects that do not implement `-Pinstance` isolation; they appear with their default `run/` instance instead of being skipped.
