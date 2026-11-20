@@ -156,6 +156,22 @@ window.__ModuleLoader__.load({
     const IconSort = (p) => svg(p, [
       h('path', { key: 'a', d: 'M7 4v16M4 17l3 3 3-3M17 20V4M14 7l3-3 3 3' }),
     ]);
+    const IconClock = (p) => svg(p, [
+      h('circle', { key: 'a', cx: 12, cy: 12, r: 8 }),
+      h('path', { key: 'b', d: 'M12 7v5l3.5 2' }),
+    ]);
+
+    /** MC 版本号按数字段比较（1.21.1 < 1.21.2 < 26.2）。 */
+    function compareVersions(a, b) {
+      const left = String(a ?? '').match(/\d+/g)?.map(Number) ?? [];
+      const right = String(b ?? '').match(/\d+/g)?.map(Number) ?? [];
+      const length = Math.max(left.length, right.length);
+      for (let i = 0; i < length; i += 1) {
+        const diff = (left[i] ?? 0) - (right[i] ?? 0);
+        if (diff !== 0) return diff;
+      }
+      return 0;
+    }
     const IconPlay = (p) => h('svg', {
       viewBox: '0 0 24 24', width: p?.size ?? 14, height: p?.size ?? 14,
       className: p?.className, 'aria-hidden': true, focusable: 'false',
@@ -265,12 +281,15 @@ window.__ModuleLoader__.load({
       'filter.title': '筛选与排序',
       'filter.status': '状态',
       'filter.loader': '加载器',
+      'filter.version': 'MC 版本',
+      'filter.allVersions': '全部版本',
       'filter.unknown': '未知',
       'filter.options': '附加筛选',
       'filter.onlyMods': '只看有 mod',
       'filter.onlyIsolated': '只看支持多实例',
       'filter.sort': '排序',
       'filter.sortDefault': '默认顺序',
+      'filter.sortVersion': '版本号',
       'filter.sortActivity': '上次活动',
       'filter.sortName': '实例名',
       'filter.sortProject': '工程路径',
@@ -282,6 +301,8 @@ window.__ModuleLoader__.load({
       'filter.reset': '重置',
       'filter.done': '完成',
       'filter.hint': '筛选和排序只影响列表显示，不会改动实例。',
+      'recent.title': '最近启动',
+      'recent.hint': '最近 24 小时内启动过的实例会置顶。',
       'empty.title': '当前工作区没有 MC 测试实例',
       'empty.body': '这里会显示各模组工程 run/<实例>/ 下的测试档案。新建一个实例，或切换到含 MC 工程的工作区。',
       'empty.create': '新建实例',
@@ -467,12 +488,15 @@ window.__ModuleLoader__.load({
       'filter.title': 'Filter and sort',
       'filter.status': 'Status',
       'filter.loader': 'Loader',
+      'filter.version': 'MC version',
+      'filter.allVersions': 'All versions',
       'filter.unknown': 'Unknown',
       'filter.options': 'More filters',
       'filter.onlyMods': 'Only instances with mods',
       'filter.onlyIsolated': 'Only multi-instance projects',
       'filter.sort': 'Sort',
       'filter.sortDefault': 'Default order',
+      'filter.sortVersion': 'Version',
       'filter.sortActivity': 'Last activity',
       'filter.sortName': 'Instance name',
       'filter.sortProject': 'Project path',
@@ -484,6 +508,8 @@ window.__ModuleLoader__.load({
       'filter.reset': 'Reset',
       'filter.done': 'Done',
       'filter.hint': 'Filters and sorting only change the list; instances are untouched.',
+      'recent.title': 'Recently launched',
+      'recent.hint': 'Instances launched in the last 24 hours are pinned to the top.',
       'empty.title': 'No Minecraft test instances in this workspace',
       'empty.body': 'Instances live under each project\'s run/<name>/. Create one, or switch to a workspace with MC projects.',
       'empty.create': 'New instance',
@@ -726,8 +752,15 @@ window.__ModuleLoader__.load({
 .mc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 27px; padding: 0 9px; border-radius: 8px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .mc-btn:hover { border-color: var(--dsw-alias-border-l2); background: color-mix(in srgb, var(--dsw-alias-label-primary) 7%, var(--dsw-alias-bg-layer-2)); }
 .mc-btn:disabled { opacity: .5; cursor: default; }
-.mc-btn.primary { background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); color: #fff; }
+.mc-btn.primary { background: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-brand-primary); color: var(--dsw-alias-bg-base); }
 .mc-btn.primary:hover { filter: brightness(1.06); }
+.mc-recent-group .mc-group-head { color: var(--dsw-alias-brand-primary); }
+.mc-select option { background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); }
+@media (prefers-color-scheme: dark) {
+  .mc-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.35); }
+  .mc-modal { box-shadow: 0 18px 60px rgba(0,0,0,.55); }
+  .mc-toast { box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+}
 .mc-btn.danger { color: var(--dsw-alias-state-error-primary); border-color: color-mix(in srgb, var(--dsw-alias-state-error-primary) 34%, var(--dsw-alias-border-l1)); background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent); }
 .mc-btn.danger:hover { background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 14%, transparent); }
 .mc-btn.ghost { border-color: transparent; background: transparent; }
@@ -1354,8 +1387,9 @@ window.__ModuleLoader__.load({
         const [error, setError] = useState(null);
         const [query, setQuery] = useState('');
         const [filter, setFilter] = useState('all');
-        const [sortKey, setSortKey] = useState('default');
-        const [sortDir, setSortDir] = useState('asc');
+        const [versionFilter, setVersionFilter] = useState('all');
+        const [sortKey, setSortKey] = useState('version');
+        const [sortDir, setSortDir] = useState('desc');
         const [onlyWithMods, setOnlyWithMods] = useState(false);
         const [onlyIsolated, setOnlyIsolated] = useState(false);
         const [selected, setSelected] = useState(null);
@@ -1504,23 +1538,60 @@ window.__ModuleLoader__.load({
           return map;
         }, [instanceList, launches]);
 
+        const versions = useMemo(() => {
+          const set = new Set();
+          for (const item of instanceList) {
+            const version = String(item.mcVersion || '').trim();
+            if (version !== '') set.add(version);
+          }
+          return [...set].sort(compareVersions).reverse();
+        }, [instanceList]);
+
         const filtered = useMemo(() => {
           const q = query.trim().toLowerCase();
           return instanceList.filter((item) => {
             if (filter === 'running' && !launchOf(idOf(item))) return false;
             if (filter === 'stopped' && launchOf(idOf(item))) return false;
             if (filter !== 'all' && filter !== 'running' && filter !== 'stopped' && item.loader !== filter) return false;
+            if (versionFilter !== 'all' && (item.mcVersion || '') !== versionFilter) return false;
             if (onlyWithMods && (item.mods?.length ?? 0) === 0) return false;
             if (onlyIsolated && item.supportsInstance === false) return false;
             if (q === '') return true;
             const hay = [idOf(item), item.runConfigName, item.name, item.projectRelPath, item.project, item.mcVersion, item.loader].join(' ').toLowerCase();
             return hay.includes(q);
           });
-        }, [instanceList, query, filter, launches, onlyWithMods, onlyIsolated]);
+        }, [instanceList, query, filter, versionFilter, launches, onlyWithMods, onlyIsolated]);
+
+        const recentPinned = useMemo(() => {
+          const windowMs = 24 * 60 * 60 * 1000;
+          const now = Date.now();
+          const records = new Map();
+          for (const item of filtered) {
+            const key = idOf(item);
+            const matching = launches.filter((launch) => {
+              const launchKey = idOf(launch);
+              const sameInstance = launchKey ? launchKey === key : launch.runConfigName === item.runConfigName;
+              if (!sameInstance) return false;
+              if (launch.workspace && item.workspace && launch.workspace !== item.workspace) return false;
+              return true;
+            });
+            const latest = matching.sort((a, b) => (b.startedAtMs ?? 0) - (a.startedAtMs ?? 0))[0];
+            if (!latest) continue;
+            const started = Number(latest.startedAtMs) || Date.parse(latest.startedAt || '') || 0;
+            const active = isActiveLaunch(latest);
+            if (!active && (!started || now - started > windowMs)) continue;
+            records.set(key, { item, started, active });
+          }
+          const sorted = [...records.values()].sort((a, b) => Number(b.active) - Number(a.active) || b.started - a.started);
+          return sorted.slice(0, Math.max(3, sorted.filter((entry) => entry.active).length)).map((entry) => entry.item);
+        }, [filtered, launches]);
+
+        const pinnedIds = useMemo(() => new Set(recentPinned.map(idOf)), [recentPinned]);
 
         const grouped = useMemo(() => {
           const map = new Map();
           for (const item of filtered) {
+            if (pinnedIds.has(idOf(item))) continue;
             const key = item.projectRelPath || item.project || '';
             if (!map.has(key)) map.set(key, []);
             map.get(key).push(item);
@@ -1533,11 +1604,16 @@ window.__ModuleLoader__.load({
             const t = Date.parse(item.lastActivity ?? '');
             return Number.isFinite(t) ? t : 0;
           };
+          const versionOf = (item) => item.mcVersion || '';
           const loaderOfItem = (item) => loaderLabelOf(item.loader);
-          const compare = (a, b) => typeof a === 'number' && typeof b === 'number'
-            ? a - b
-            : String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+          const compare = (a, b) => {
+            if (sortKey === 'version') return compareVersions(a, b);
+            return typeof a === 'number' && typeof b === 'number'
+              ? a - b
+              : String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+          };
           const itemValue = (item) => {
+            if (sortKey === 'version') return versionOf(item);
             if (sortKey === 'activity') return timeOf(item);
             if (sortKey === 'mods') return item.mods?.length ?? 0;
             if (sortKey === 'status') return launchOf(idOf(item)) ? 1 : 0;
@@ -1546,6 +1622,9 @@ window.__ModuleLoader__.load({
             return item.name || '';
           };
           const groupValue = (items) => {
+            if (sortKey === 'version') {
+              return items.reduce((best, item) => compareVersions(versionOf(item), best) > 0 ? versionOf(item) : best, '');
+            }
             if (sortKey === 'activity') return Math.max(...items.map(timeOf));
             if (sortKey === 'mods') return items.reduce((sum, item) => sum + (item.mods?.length ?? 0), 0);
             if (sortKey === 'status') return items.some((item) => launchOf(idOf(item))) ? 1 : 0;
@@ -1558,12 +1637,13 @@ window.__ModuleLoader__.load({
             items.sort((a, b) => compare(itemValue(a), itemValue(b)) * dir || displayNameOf(a).localeCompare(displayNameOf(b)));
           }
           return entries;
-        }, [filtered, sortKey, sortDir, launches]);
+        }, [filtered, pinnedIds, sortKey, sortDir, launches]);
 
         const activeViewCount = (filter !== 'all' ? 1 : 0)
+          + (versionFilter !== 'all' ? 1 : 0)
           + (onlyWithMods ? 1 : 0)
           + (onlyIsolated ? 1 : 0)
-          + (sortKey !== 'default' ? 1 : 0);
+          + ((sortKey === 'version' && sortDir === 'desc') || sortKey === 'default' ? 0 : 1);
 
         const busyKey = (suffix) => busy === suffix;
 
@@ -1871,10 +1951,11 @@ window.__ModuleLoader__.load({
 
         const resetView = () => {
           setFilter('all');
+          setVersionFilter('all');
           setOnlyWithMods(false);
           setOnlyIsolated(false);
-          setSortKey('default');
-          setSortDir('asc');
+          setSortKey('version');
+          setSortDir('desc');
         };
 
         const filterModal = () => {
@@ -1890,13 +1971,14 @@ window.__ModuleLoader__.load({
             ['unknown', t('filter.unknown'), counts.unknown],
           ].filter(([, , count]) => count > 0);
           const sortOptions = [
-            ['default', t('filter.sortDefault')],
+            ['version', t('filter.sortVersion')],
             ['activity', t('filter.sortActivity')],
             ['name', t('filter.sortName')],
             ['project', t('filter.sortProject')],
             ['loader', t('filter.sortLoader')],
             ['mods', t('filter.sortMods')],
             ['status', t('filter.sortStatus')],
+            ['default', t('filter.sortDefault')],
           ];
           const chip = ([value, label, count]) => h('button', {
             key: value, type: 'button', className: cx('mc-chip', filter === value && 'on'),
@@ -1917,6 +1999,14 @@ window.__ModuleLoader__.load({
           h('div', { className: 'mc-filter-section' },
             h('b', null, t('filter.loader')),
             h('div', { className: 'mc-filter-chips' }, loaderChips.map(chip))),
+          h('div', { className: 'mc-filter-section' },
+            h('b', null, t('filter.version')),
+            h('select', {
+              className: 'mc-select', value: versionFilter,
+              onChange: (event) => setVersionFilter(event.target.value),
+            },
+            h('option', { value: 'all' }, t('filter.allVersions')),
+            versions.map((version) => h('option', { key: version, value: version }, version)))),
           h('div', { className: 'mc-filter-section' },
             h('b', null, t('filter.options')),
             h('label', { className: 'mc-checkline' },
@@ -2058,6 +2148,18 @@ window.__ModuleLoader__.load({
         };
 
         // 选择/过滤的结果
+        const renderCard = (instance) => h(InstanceCard, {
+          key: idOf(instance),
+          instance,
+          launch: launchOf(idOf(instance)),
+          latest: latestLaunchOf(idOf(instance)),
+          busy: busy === `launch:${idOf(instance)}` || busy === `stop:${idOf(instance)}`,
+          onOpen: () => openDetail(instance),
+          onLaunch: () => doLaunch(instance),
+          onStop: () => { const launch = launchOf(idOf(instance)); if (launch) doStop(instance, launch); },
+          onMore: () => openActions(idOf(instance)),
+        });
+
         const renderList = () => {
           if (loading && !data) {
             return h('div', { className: 'mc-skeleton' }, [0, 1, 2, 3].map((i) => h('div', { key: i, className: 'mc-sk-card' })));
@@ -2083,32 +2185,36 @@ window.__ModuleLoader__.load({
                   onClick: () => setAutoHide(!autoHide),
                 }, h(IconSettings, { size: 12 }), `${t('settings.autoHide')} · ${autoHide ? t('settings.on') : t('settings.off')}`)));
           }
-          return h('div', { className: 'mc-list' }, grouped.length === 0
+          const recentCollapsed = collapsedGroups.__recent__ === true;
+          const recentGroup = recentPinned.length === 0 ? null : h('section', { className: 'mc-group mc-recent-group', key: '__recent__' },
+            h('button', {
+              type: 'button', className: 'mc-group-head',
+              title: t('recent.hint'),
+              'aria-expanded': !recentCollapsed,
+              onClick: () => setCollapsedGroups((prev) => ({ ...prev, __recent__: !prev.__recent__ })),
+            },
+            h(IconChevron, { size: 11, className: cx('mc-chev', recentCollapsed && 'collapsed') }),
+            h(IconClock, { size: 12 }),
+            h('span', null, t('recent.title')),
+            h('span', { className: 'mc-group-count' }, t('project.instances', { count: recentPinned.length }))),
+            recentCollapsed ? null : recentPinned.map(renderCard));
+          const normalGroups = grouped.map(([projectPath, items]) => {
+            const collapsed = collapsedGroups[projectPath] === true;
+            return h('section', { className: 'mc-group', key: projectPath },
+              h('button', {
+                type: 'button', className: 'mc-group-head',
+                'aria-expanded': !collapsed,
+                onClick: () => setCollapsedGroups((prev) => ({ ...prev, [projectPath]: !prev[projectPath] })),
+              },
+              h(IconChevron, { size: 11, className: cx('mc-chev', collapsed && 'collapsed') }),
+              h(IconBox, { size: 12 }),
+              h('span', { title: projectPath }, projectPath || items[0]?.project || ''),
+              h('span', { className: 'mc-group-count' }, t('project.instances', { count: items.length }))),
+              collapsed ? null : items.map(renderCard));
+          });
+          return h('div', { className: 'mc-list' }, recentPinned.length === 0 && grouped.length === 0
             ? h('div', { className: 'mc-hint' }, t('misc.empty'))
-            : grouped.map(([projectPath, items]) => {
-              const collapsed = collapsedGroups[projectPath] === true;
-              return h('section', { className: 'mc-group', key: projectPath },
-                h('button', {
-                  type: 'button', className: 'mc-group-head',
-                  'aria-expanded': !collapsed,
-                  onClick: () => setCollapsedGroups((prev) => ({ ...prev, [projectPath]: !prev[projectPath] })),
-                },
-                h(IconChevron, { size: 11, className: cx('mc-chev', collapsed && 'collapsed') }),
-                h(IconBox, { size: 12 }),
-                h('span', { title: projectPath }, projectPath || items[0]?.project || ''),
-                h('span', { className: 'mc-group-count' }, t('project.instances', { count: items.length }))),
-                collapsed ? null : items.map((instance) => h(InstanceCard, {
-                  key: idOf(instance),
-                  instance,
-                  launch: launchOf(idOf(instance)),
-                  latest: latestLaunchOf(idOf(instance)),
-                  busy: busy === `launch:${idOf(instance)}` || busy === `stop:${idOf(instance)}`,
-                  onOpen: () => openDetail(instance),
-                  onLaunch: () => doLaunch(instance),
-                  onStop: () => { const launch = launchOf(idOf(instance)); if (launch) doStop(instance, launch); },
-                  onMore: () => openActions(idOf(instance)),
-                })));
-            }));
+            : [recentGroup, ...normalGroups].filter(Boolean));
         };
 
         return h('div', { className: 'mc-root', style: { '--mc-font': 'inherit' } },

@@ -25,7 +25,7 @@ or one click.
 | Capability | Detail |
 |---|---|
 | **PCL2-style sidebar panel** | An “MC instances” tab in the session's right sidebar: cards grouped by project with loader, MC version, JDK, mod count and last activity; search, loader filters and a running filter. Detects the current session workspace; auto-hide is on by default |
-| **Filter / sort** | A “Filter / sort” toolbar button: filter by loader, running state, has mods, or multi-instance projects; sort by last activity, instance name, project path, loader, mod count or running state, ascending or descending |
+| **Filter / sort** | A “Filter / sort” toolbar button: filter by loader, MC version, running state, has mods, or multi-instance projects; versions sort descending by default, and you can sort by last activity, instance name, project path, loader, mod count or running state in either direction; instances launched in the last 24 hours are pinned in their own group at the top |
 | **Launch / stop** | Starts `gradlew runClient -Pinstance=…` (or the server) from the panel, shows PID and uptime, and stops the whole process tree; Gradle output goes to the project's `logs/launch-*.log` |
 | **Game and Gradle logs** | Two log views with auto-refresh and error/warning highlighting, plus copy-path and reveal-in-file-manager actions |
 | **List instances** | Finds every project that supports instance isolation plus all of its instances (including the default `run/`), with loader, MC version, JDK, mod count and last-played time |
