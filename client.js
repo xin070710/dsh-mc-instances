@@ -150,6 +150,12 @@ window.__ModuleLoader__.load({
       h('circle', { key: 'a', cx: 11, cy: 11, r: 6.5 }),
       h('path', { key: 'b', d: 'm16 16 4.5 4.5' }),
     ]);
+    const IconFilter = (p) => svg(p, [
+      h('path', { key: 'a', d: 'M3 5h18l-7 8v5l-4 2v-7z' }),
+    ]);
+    const IconSort = (p) => svg(p, [
+      h('path', { key: 'a', d: 'M7 4v16M4 17l3 3 3-3M17 20V4M14 7l3-3 3 3' }),
+    ]);
     const IconPlay = (p) => h('svg', {
       viewBox: '0 0 24 24', width: p?.size ?? 14, height: p?.size ?? 14,
       className: p?.className, 'aria-hidden': true, focusable: 'false',
@@ -254,6 +260,28 @@ window.__ModuleLoader__.load({
       'search.placeholder': '搜索实例、工程、版本…',
       'filter.all': '全部',
       'filter.running': '运行中',
+      'filter.stopped': '未运行',
+      'filter.button': '筛选/排序',
+      'filter.title': '筛选与排序',
+      'filter.status': '状态',
+      'filter.loader': '加载器',
+      'filter.unknown': '未知',
+      'filter.options': '附加筛选',
+      'filter.onlyMods': '只看有 mod',
+      'filter.onlyIsolated': '只看支持多实例',
+      'filter.sort': '排序',
+      'filter.sortDefault': '默认顺序',
+      'filter.sortActivity': '上次活动',
+      'filter.sortName': '实例名',
+      'filter.sortProject': '工程路径',
+      'filter.sortLoader': '加载器',
+      'filter.sortMods': 'mod 数量',
+      'filter.sortStatus': '运行状态',
+      'filter.asc': '升序',
+      'filter.desc': '降序',
+      'filter.reset': '重置',
+      'filter.done': '完成',
+      'filter.hint': '筛选和排序只影响列表显示，不会改动实例。',
       'empty.title': '当前工作区没有 MC 测试实例',
       'empty.body': '这里会显示各模组工程 run/<实例>/ 下的测试档案。新建一个实例，或切换到含 MC 工程的工作区。',
       'empty.create': '新建实例',
@@ -434,6 +462,28 @@ window.__ModuleLoader__.load({
       'search.placeholder': 'Search instances, projects, versions…',
       'filter.all': 'All',
       'filter.running': 'Running',
+      'filter.stopped': 'Not running',
+      'filter.button': 'Filter / sort',
+      'filter.title': 'Filter and sort',
+      'filter.status': 'Status',
+      'filter.loader': 'Loader',
+      'filter.unknown': 'Unknown',
+      'filter.options': 'More filters',
+      'filter.onlyMods': 'Only instances with mods',
+      'filter.onlyIsolated': 'Only multi-instance projects',
+      'filter.sort': 'Sort',
+      'filter.sortDefault': 'Default order',
+      'filter.sortActivity': 'Last activity',
+      'filter.sortName': 'Instance name',
+      'filter.sortProject': 'Project path',
+      'filter.sortLoader': 'Loader',
+      'filter.sortMods': 'Mod count',
+      'filter.sortStatus': 'Running status',
+      'filter.asc': 'Ascending',
+      'filter.desc': 'Descending',
+      'filter.reset': 'Reset',
+      'filter.done': 'Done',
+      'filter.hint': 'Filters and sorting only change the list; instances are untouched.',
       'empty.title': 'No Minecraft test instances in this workspace',
       'empty.body': 'Instances live under each project\'s run/<name>/. Create one, or switch to a workspace with MC projects.',
       'empty.create': 'New instance',
@@ -618,6 +668,17 @@ window.__ModuleLoader__.load({
 .mc-ws-path { font-size: 10.5px; color: var(--dsw-alias-label-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-ws-chev { color: var(--dsw-alias-label-secondary); display: inline-flex; transform: rotate(90deg); }
 .mc-toolbar { padding: 8px 12px 6px; display: flex; flex-direction: column; gap: 7px; background: var(--dsw-alias-bg-base); }
+.mc-search-row { display: flex; align-items: center; gap: 6px; }
+.mc-search-row .mc-search { flex: 1; min-width: 0; }
+.mc-filter-btn { flex: none; height: 30px; padding: 0 9px; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 9px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-secondary); font: inherit; font-size: 11px; cursor: pointer; }
+.mc-filter-btn:hover { color: var(--dsw-alias-label-primary); border-color: var(--dsw-alias-border-l2); }
+.mc-filter-btn.on { color: var(--dsw-alias-brand-primary); border-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 48%, var(--dsw-alias-border-l1)); background: color-mix(in srgb, var(--dsw-alias-brand-primary) 10%, var(--dsw-alias-bg-layer-1)); }
+.mc-filter-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--dsw-alias-brand-primary); color: var(--dsw-alias-bg-base); font-size: 9px; font-weight: 600; }
+.mc-filter-section { display: flex; flex-direction: column; gap: 7px; }
+.mc-filter-section > b { font-size: 11px; color: var(--dsw-alias-label-secondary); font-weight: 600; }
+.mc-filter-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.mc-sort-row { display: flex; gap: 7px; align-items: center; }
+.mc-sort-row .mc-select { flex: 1; min-width: 0; }
 .mc-search { position: relative; display: flex; align-items: center; }
 .mc-search svg { position: absolute; left: 9px; color: var(--dsw-alias-label-secondary); pointer-events: none; }
 .mc-search input { width: 100%; height: 30px; padding: 0 28px 0 29px; border: 1px solid var(--dsw-alias-border-l1); border-radius: 9px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); font: inherit; font-size: 12px; outline: none; }
@@ -1293,6 +1354,10 @@ window.__ModuleLoader__.load({
         const [error, setError] = useState(null);
         const [query, setQuery] = useState('');
         const [filter, setFilter] = useState('all');
+        const [sortKey, setSortKey] = useState('default');
+        const [sortDir, setSortDir] = useState('asc');
+        const [onlyWithMods, setOnlyWithMods] = useState(false);
+        const [onlyIsolated, setOnlyIsolated] = useState(false);
         const [selected, setSelected] = useState(null);
         const [launches, setLaunches] = useState([]);
         const [busy, setBusy] = useState(null);
@@ -1443,12 +1508,15 @@ window.__ModuleLoader__.load({
           const q = query.trim().toLowerCase();
           return instanceList.filter((item) => {
             if (filter === 'running' && !launchOf(idOf(item))) return false;
-            if (filter !== 'all' && filter !== 'running' && item.loader !== filter) return false;
+            if (filter === 'stopped' && launchOf(idOf(item))) return false;
+            if (filter !== 'all' && filter !== 'running' && filter !== 'stopped' && item.loader !== filter) return false;
+            if (onlyWithMods && (item.mods?.length ?? 0) === 0) return false;
+            if (onlyIsolated && item.supportsInstance === false) return false;
             if (q === '') return true;
             const hay = [idOf(item), item.runConfigName, item.name, item.projectRelPath, item.project, item.mcVersion, item.loader].join(' ').toLowerCase();
             return hay.includes(q);
           });
-        }, [instanceList, query, filter, launches]);
+        }, [instanceList, query, filter, launches, onlyWithMods, onlyIsolated]);
 
         const grouped = useMemo(() => {
           const map = new Map();
@@ -1457,8 +1525,45 @@ window.__ModuleLoader__.load({
             if (!map.has(key)) map.set(key, []);
             map.get(key).push(item);
           }
-          return [...map.entries()];
-        }, [filtered]);
+          const entries = [...map.entries()];
+          if (sortKey === 'default') return entries;
+
+          const dir = sortDir === 'asc' ? 1 : -1;
+          const timeOf = (item) => {
+            const t = Date.parse(item.lastActivity ?? '');
+            return Number.isFinite(t) ? t : 0;
+          };
+          const loaderOfItem = (item) => loaderLabelOf(item.loader);
+          const compare = (a, b) => typeof a === 'number' && typeof b === 'number'
+            ? a - b
+            : String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+          const itemValue = (item) => {
+            if (sortKey === 'activity') return timeOf(item);
+            if (sortKey === 'mods') return item.mods?.length ?? 0;
+            if (sortKey === 'status') return launchOf(idOf(item)) ? 1 : 0;
+            if (sortKey === 'loader') return loaderOfItem(item);
+            if (sortKey === 'project') return item.projectRelPath || '';
+            return item.name || '';
+          };
+          const groupValue = (items) => {
+            if (sortKey === 'activity') return Math.max(...items.map(timeOf));
+            if (sortKey === 'mods') return items.reduce((sum, item) => sum + (item.mods?.length ?? 0), 0);
+            if (sortKey === 'status') return items.some((item) => launchOf(idOf(item))) ? 1 : 0;
+            if (sortKey === 'loader') return loaderOfItem(items[0]);
+            return items[0]?.projectRelPath || items[0]?.project || '';
+          };
+
+          entries.sort((a, b) => compare(groupValue(a[1]), groupValue(b[1])) * dir || a[0].localeCompare(b[0]));
+          for (const [, items] of entries) {
+            items.sort((a, b) => compare(itemValue(a), itemValue(b)) * dir || displayNameOf(a).localeCompare(displayNameOf(b)));
+          }
+          return entries;
+        }, [filtered, sortKey, sortDir, launches]);
+
+        const activeViewCount = (filter !== 'all' ? 1 : 0)
+          + (onlyWithMods ? 1 : 0)
+          + (onlyIsolated ? 1 : 0)
+          + (sortKey !== 'default' ? 1 : 0);
 
         const busyKey = (suffix) => busy === suffix;
 
@@ -1764,6 +1869,83 @@ window.__ModuleLoader__.load({
           })),
         h('div', { className: 'mc-hint', style: { padding: 0 } }, t('settings.scope')));
 
+        const resetView = () => {
+          setFilter('all');
+          setOnlyWithMods(false);
+          setOnlyIsolated(false);
+          setSortKey('default');
+          setSortDir('asc');
+        };
+
+        const filterModal = () => {
+          const statusChips = [
+            ['all', t('filter.all'), counts.all],
+            ['running', t('filter.running'), counts.running],
+            ['stopped', t('filter.stopped'), Math.max(0, counts.all - counts.running)],
+          ];
+          const loaderChips = [
+            ['fabric', 'Fabric', counts.fabric],
+            ['neoforge', 'NeoForge', counts.neoforge],
+            ['forge', 'Forge', counts.forge],
+            ['unknown', t('filter.unknown'), counts.unknown],
+          ].filter(([, , count]) => count > 0);
+          const sortOptions = [
+            ['default', t('filter.sortDefault')],
+            ['activity', t('filter.sortActivity')],
+            ['name', t('filter.sortName')],
+            ['project', t('filter.sortProject')],
+            ['loader', t('filter.sortLoader')],
+            ['mods', t('filter.sortMods')],
+            ['status', t('filter.sortStatus')],
+          ];
+          const chip = ([value, label, count]) => h('button', {
+            key: value, type: 'button', className: cx('mc-chip', filter === value && 'on'),
+            onClick: () => setFilter(value),
+          }, label, h('span', { className: 'mc-tab-count' }, String(count)));
+          return h(Modal, {
+            title: t('filter.title'),
+            closeLabel: t('misc.close'),
+            onClose: () => setModal(null),
+            footer: [
+              h('button', { key: 'reset', type: 'button', className: 'mc-btn', onClick: resetView }, t('filter.reset')),
+              h('button', { key: 'done', type: 'button', className: 'mc-btn primary', onClick: () => setModal(null) }, t('filter.done')),
+            ],
+          },
+          h('div', { className: 'mc-filter-section' },
+            h('b', null, t('filter.status')),
+            h('div', { className: 'mc-filter-chips' }, statusChips.map(chip))),
+          h('div', { className: 'mc-filter-section' },
+            h('b', null, t('filter.loader')),
+            h('div', { className: 'mc-filter-chips' }, loaderChips.map(chip))),
+          h('div', { className: 'mc-filter-section' },
+            h('b', null, t('filter.options')),
+            h('label', { className: 'mc-checkline' },
+              h('input', { type: 'checkbox', checked: onlyWithMods, onChange: (event) => setOnlyWithMods(event.target.checked) }),
+              t('filter.onlyMods')),
+            h('label', { className: 'mc-checkline' },
+              h('input', { type: 'checkbox', checked: onlyIsolated, onChange: (event) => setOnlyIsolated(event.target.checked) }),
+              t('filter.onlyIsolated'))),
+          h('div', { className: 'mc-filter-section' },
+            h('b', null, t('filter.sort')),
+            h('div', { className: 'mc-sort-row' },
+              h('select', {
+                className: 'mc-select', value: sortKey,
+                onChange: (event) => {
+                  const next = event.target.value;
+                  setSortKey(next);
+                  if (next === 'default' || ['name', 'project', 'loader'].includes(next)) setSortDir('asc');
+                  else setSortDir('desc');
+                },
+              }, sortOptions.map(([value, label]) => h('option', { key: value, value }, label))),
+              h('button', {
+                type: 'button', className: 'mc-btn small',
+                disabled: sortKey === 'default',
+                title: sortDir === 'asc' ? t('filter.asc') : t('filter.desc'),
+                onClick: () => setSortDir((value) => value === 'asc' ? 'desc' : 'asc'),
+              }, h(IconSort, { size: 12 }), sortDir === 'asc' ? t('filter.asc') : t('filter.desc')))),
+          h('p', { className: 'mc-hint', style: { padding: 0 } }, t('filter.hint')));
+        };
+
         const createModal = () => {
           const allProjects = data?.projects ?? [];
           const projects = allProjects.filter((p) => p.supportsInstance);
@@ -1938,6 +2120,7 @@ window.__ModuleLoader__.load({
             onSettings: () => setModal({ kind: 'settings' }),
           }),
           selected === null ? h('div', { className: 'mc-toolbar' },
+            h('div', { className: 'mc-search-row' },
             h('div', { className: 'mc-search' },
               h(IconSearch, { size: 13 }),
               h('input', {
@@ -1945,6 +2128,12 @@ window.__ModuleLoader__.load({
                 onChange: (event) => setQuery(event.target.value),
               }),
               query ? h('button', { type: 'button', className: 'mc-search-clear', onClick: () => setQuery(''), 'aria-label': t('misc.clear'), title: t('misc.clear') }, h(IconClose, { size: 12 })) : null),
+            h('button', {
+              type: 'button', className: cx('mc-filter-btn', activeViewCount > 0 && 'on'),
+              title: t('filter.title'), 'aria-label': t('filter.title'),
+              onClick: () => setModal({ kind: 'filter' }),
+            }, h(IconFilter, { size: 13 }), t('filter.button'),
+            activeViewCount > 0 ? h('span', { className: 'mc-filter-badge' }, String(activeViewCount)) : null)),
             h('div', { className: 'mc-chips' },
               h('button', { type: 'button', className: cx('mc-chip', filter === 'all' && 'on'), onClick: () => setFilter('all') }, t('filter.all'), h('span', { className: 'mc-tab-count' }, String(counts.all))),
               counts.fabric > 0 ? h('button', { type: 'button', className: cx('mc-chip', filter === 'fabric' && 'on'), style: { '--mc-accent': LOADERS.fabric.accent }, onClick: () => setFilter('fabric') }, h('i', { className: 'mc-dot' }), 'Fabric', h('span', { className: 'mc-tab-count' }, String(counts.fabric))) : null,
@@ -1984,6 +2173,7 @@ window.__ModuleLoader__.load({
             : h('div', { className: 'mc-empty' }, h('p', null, t('misc.loading'))))),
           modal?.kind === 'workspace' ? workspaceModal() : null,
           modal?.kind === 'settings' ? settingsModal() : null,
+          modal?.kind === 'filter' ? filterModal() : null,
           modal?.kind === 'actions' ? actionsModal() : null,
           modal?.kind === 'create' ? createModal() : null,
           modal?.kind === 'delete' ? deleteModal() : null,
