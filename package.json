@@ -1,6 +1,6 @@
 {
   "name": "dsh-mc-instances",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Minecraft mod-testing instance manager for DeepSeek Harness: a PCL2-style right-sidebar panel that detects run/<name>/ profiles, launches/stops them, toggles mods, tails game and Gradle logs, creates/deletes instances and writes IntelliJ run configurations.",
   "type": "module",
   "license": "MIT",
@@ -61,7 +61,7 @@
   ],
   "engines": {
     "node": ">=20",
-    "dsh": ">=0.2.1"
+    "dsh": ">=0.2.1-0"
   },
   "scripts": {
     "test": "node --test",

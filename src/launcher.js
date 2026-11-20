@@ -75,6 +75,19 @@ function resolveJavaHome(javaVersion) {
   return null
 }
 
+/** Windows 上没有 gradlew.bat 时，Git Bash 的 bash.exe 可以执行 gradlew。 */
+function findBash() {
+  if (process.env.DSH_MC_BASH && fs.existsSync(process.env.DSH_MC_BASH)) return process.env.DSH_MC_BASH
+  for (const candidate of [
+    'C:\\Program Files\\Git\\bin\\bash.exe',
+    'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+    'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
+  ]) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+  return null
+}
+
 /** 启动/运行期的错误也写进启动日志，便于事后排查。 */
 function LogError(message) {
   try {
@@ -104,9 +117,16 @@ function probeGradleJavaHome(projectDir) {
  * @returns {{pid:number, logFile:string, command:string, javaHome:string|null, side:string, instance:string}}
  */
 export function launchInstance(project, profile, { side = 'client', extraArgs = [] } = {}) {
-  const gradlew = path.join(project.dir, 'gradlew.bat')
-  if (!fs.existsSync(gradlew)) {
-    throw new Error(`工程目录里没有 gradlew.bat：${gradlew}`)
+  const bat = path.join(project.dir, 'gradlew.bat')
+  const sh = path.join(project.dir, 'gradlew')
+  const wrapper = fs.existsSync(bat) ? bat : fs.existsSync(sh) ? sh : null
+  if (!wrapper) {
+    throw new Error(`工程目录里没有 Gradle wrapper（gradlew.bat / gradlew）：${project.dir}`)
+  }
+  const isBat = wrapper.toLowerCase().endsWith('.bat')
+  const bash = !isBat && process.platform === 'win32' ? findBash() : null
+  if (!isBat && process.platform === 'win32' && !bash) {
+    throw new Error('工程只有 gradlew（没有 gradlew.bat），且没找到 Git Bash；请补一个 gradlew.bat 或安装 Git for Windows')
   }
 
   const task = side === 'server' ? 'runServer' : 'runClient'
@@ -138,9 +158,14 @@ export function launchInstance(project, profile, { side = 'client', extraArgs = 
   ].join('\n')
   fs.writeSync(fd, header)
 
-  // Windows 上 Node 不能直接 spawn .bat（会 EINVAL），必须经 cmd /c。
+  // Windows 上 Node 不能直接 spawn .bat（会 EINVAL），必须经 cmd /c；
+  // 只有 gradlew 的工程用 Git Bash 执行。Unix 上通过 sh 执行。
   // 日志已落到文件，控制台窗口隐藏即可。
-  const child = spawn('cmd.exe', ['/c', gradlew, ...args], {
+  const command = isBat ? 'cmd.exe' : bash ?? 'sh'
+  const commandArgs = isBat
+    ? ['/c', wrapper, ...args]
+    : [(process.platform === 'win32' ? wrapper.replace(/\\/g, '/') : wrapper), ...args]
+  const child = spawn(command, commandArgs, {
     cwd: project.dir,
     detached: true,
     windowsHide: true,

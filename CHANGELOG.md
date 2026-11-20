@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 — 2026-11-20
+
+- Detect standard Minecraft projects that do not implement `-Pinstance` isolation; they appear with their default `run/` instance instead of being skipped.
+- Detect projects that only ship `gradlew` (no `gradlew.bat`) on Windows; launch them through Git Bash when available.
+- Projects without isolation now show a “default run only” hint; creating extra instances is rejected with a clear message.
+
 ## 1.0.4 — 2026-11-16
 
 - Re-release under the `xin070710` account with a clean commit history and no old account references.

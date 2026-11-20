@@ -48,6 +48,31 @@ function tmpWorkspace() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'mcq-test-'))
 }
 
+test('扫描：没有 -Pinstance 的普通工程也会显示默认 run/（含只有 gradlew 的工程）', () => {
+  const ws = tmpWorkspace()
+  // 1) 有 gradlew.bat、标准 run/，但 build.gradle 完全不提 instance
+  const plain = path.join(ws, 'Fabric', 'chronowatch')
+  fs.mkdirSync(path.join(plain, 'run', 'mods'), { recursive: true })
+  fs.writeFileSync(path.join(plain, 'gradlew.bat'), '@echo off\n')
+  fs.writeFileSync(path.join(plain, 'build.gradle'), "plugins { id 'fabric-loom' version '1.17.20' }\nloom { runs { client { runDir 'run' } } }\n")
+  fs.writeFileSync(path.join(plain, 'gradle.properties'), 'minecraft_version=1.21.1\n')
+  // 2) 只有 gradlew（没有 .bat）的工程也要能被扫描到
+  const shOnly = path.join(ws, 'NeoForge', 'starrynight')
+  fs.mkdirSync(path.join(shOnly, 'run', 'logs'), { recursive: true })
+  fs.writeFileSync(path.join(shOnly, 'gradlew'), '#!/bin/sh\n')
+  fs.writeFileSync(path.join(shOnly, 'build.gradle'), "plugins { id 'net.neoforged.moddev' version '2.0.148' }\n")
+  fs.writeFileSync(path.join(shOnly, 'gradle.properties'), 'minecraft_version=1.21.1\nneo_version=21.1.248\n')
+
+  const { projects, profiles } = scan(ws)
+  assert.equal(projects.length, 2, `应识别 2 个普通工程，实际 ${projects.map((p) => p.relPath).join(', ')}`)
+  assert.equal(projects.filter((p) => p.supportsInstance).length, 0)
+  assert.equal(profiles.length, 2, '没有隔离支持的工程只应出现默认实例')
+  assert.ok(profiles.every((p) => p.name === '' && p.supportsInstance === false))
+
+  assert.throws(() => createInstance(ws, { project: 'chronowatch', instance: 'dev2' }), /没有 -Pinstance 隔离支持/)
+  fs.rmSync(ws, { recursive: true, force: true })
+})
+
 test('扫描：识别加载器、排除模板目录、列出默认实例', () => {
   const ws = tmpWorkspace()
   makeProject(ws, path.join('NeoForge', 'pokeemc'))

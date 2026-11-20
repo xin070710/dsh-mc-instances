@@ -40,7 +40,7 @@ function statSafe(p) {
   try { return fs.statSync(p) } catch { return null }
 }
 
-/** 广度优先找 gradlew.bat，跳过模板/构建/依赖目录。 */
+/** 广度优先找 Gradle wrapper，跳过模板/构建/依赖目录。gradlew.bat 或 gradlew 任一即可。 */
 function findProjects(root, maxDepth = 4, budget = {}) {
   const out = []
   const queue = [[root, 0]]
@@ -55,7 +55,7 @@ function findProjects(root, maxDepth = 4, budget = {}) {
     let entries
     try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { continue }
 
-    if (entries.some((e) => e.isFile() && e.name === 'gradlew.bat')) {
+    if (entries.some((e) => e.isFile() && (e.name === 'gradlew.bat' || e.name === 'gradlew'))) {
       const rel = path.relative(root, dir)
       // 工作区根自身若是工程也要算；其下的模板/脚手架目录（段名以 _ 开头）不算
       const segs = rel === '' ? [] : rel.split(path.sep)
@@ -84,22 +84,27 @@ function detectProject(dir, root) {
   if (!fs.existsSync(buildGradle)) return null
   let gradleText
   try { gradleText = fs.readFileSync(buildGradle, 'utf8') } catch { return null }
-  if (!/instance/i.test(gradleText)) return null
 
   const propsPath = path.join(dir, 'gradle.properties')
   const props = fs.existsSync(propsPath) ? fs.readFileSync(propsPath, 'utf8') : ''
   const all = `${gradleText}\n${props}`
-
-  const supportsInstance = /-Pinstance/.test(gradleText) || /findProperty\(\s*['"]instance['"]/.test(gradleText)
-
-  const mcVersion = firstMatch(all, /minecraft_version\s*[=:]\s*([0-9][\w.-]*)/)
-    || firstMatch(all, /minecraft\s+["']([^"']+)["']/) || ''
 
   // 判定顺序 = 特异性从高到低；不能用「是否出现 neoforge 字样」（注释里会提到源工程）
   const hasFabric = /fabric-loom/.test(gradleText) || /fabric_api_version/.test(props)
   const hasNeoForge = /net\.neoforged\.(moddev|gradle)/.test(gradleText) || /neo_version/.test(props)
   const hasForge = /net\.minecraftforge\.gradle/.test(gradleText) || /forge_version/.test(props)
   const loader = hasFabric ? 'fabric' : hasNeoForge ? 'neoforge' : hasForge ? 'forge' : 'unknown'
+
+  const hasRun = fs.existsSync(path.join(dir, 'run'))
+  // 以前这里要求 build.gradle 里出现 instance，导致没有 -Pinstance 的普通工程
+  // （标准 run/ 目录）完全不被扫描。现在只要认得出加载器或确实有 run/ 就算工程；
+  // supportsInstance 只决定“能不能建多个隔离实例”，不影响默认 run/ 的展示。
+  if (loader === 'unknown' && !hasRun && !/instance/i.test(gradleText)) return null
+
+  const supportsInstance = /-Pinstance/.test(gradleText) || /findProperty\(\s*['"]instance['"]/.test(gradleText)
+
+  const mcVersion = firstMatch(all, /minecraft_version\s*[=:]\s*([0-9][\w.-]*)/)
+    || firstMatch(all, /minecraft\s+["']([^"']+)["']/) || ''
 
   let java = Number(firstMatch(all, /JavaLanguageVersion\.of\((\d+)\)/)
     || firstMatch(all, /sourceCompatibility\s*=\s*(?:JavaVersion\.VERSION_)?(\d+)/) || 0)
@@ -150,6 +155,8 @@ function readProfile(project, name) {
   return {
     project: project.name,
     projectRelPath: project.relPath,
+    loader: project.loader,
+    supportsInstance: project.supportsInstance,
     name: isDefault ? '' : name,
     displayName: isDefault ? '(默认) run/' : name,
     // 工作区内唯一标识：工程相对路径 + 实例名。runConfigName 只保证「同工程内」
@@ -177,7 +184,7 @@ export function scan(workspace, { withProfiles = true, budget = {} } = {}) {
   const projects = []
   for (const dir of findProjects(workspace, 4, budget)) {
     const p = detectProject(dir, workspace)
-    if (!p || (!p.supportsInstance && !withProfiles)) continue
+    if (!p) continue
     projects.push(p)
   }
   projects.sort((a, b) => a.relPath.localeCompare(b.relPath))
@@ -185,7 +192,9 @@ export function scan(workspace, { withProfiles = true, budget = {} } = {}) {
   const profiles = []
   for (const p of projects) {
     profiles.push(readProfile(p, ''))
-    if (!withProfiles) continue
+    // 没有 -Pinstance 的普通工程只有默认 run/；其 run/ 下的目录是 Minecraft
+    // 的固有目录（mods/config/...），不能当实例。
+    if (!withProfiles || !p.supportsInstance) continue
     for (const d of listDirs(p.runRoot)) {
       if (d.startsWith('.') || RESERVED_RUN_DIRS.has(d.toLowerCase())) continue
       const full = path.join(p.runRoot, d)
@@ -251,6 +260,7 @@ export function createInstance(workspace, { project: projectName, instance, copy
   const { projects } = scan(workspace, { withProfiles: false })
   const project = resolveProject(projects, projectName)
   if (!project) throw new Error(`找不到工程「${projectName}」。可用：${projectListForError(projects)}`)
+  if (!project.supportsInstance) throw new Error(`工程「${project.name}」没有 -Pinstance 隔离支持，只能使用默认 run/`)
 
   const gameDir = path.join(project.runRoot, name)
   if (fs.existsSync(gameDir)) throw new Error(`实例目录已存在：${gameDir}`)

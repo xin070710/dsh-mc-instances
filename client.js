@@ -266,6 +266,8 @@ window.__ModuleLoader__.load({
       'notice.autoSwitch': '当前工作区没有实例，已切换到「{name}」',
       'project.instances': '{count} 个实例',
       'instance.default': '默认',
+      'instance.defaultOnly': '仅默认 run',
+      'instance.defaultOnlyHint': '该工程没有 -Pinstance 隔离支持，只能使用默认 run/；要建多个实例需要先给 build.gradle 加隔离逻辑。',
       'instance.never': '尚未启动',
       'instance.running': '运行中',
       'instance.starting': '启动中',
@@ -350,6 +352,7 @@ window.__ModuleLoader__.load({
       'logs.followHint': '每 2 秒读取末尾 220 行。',
       'logs.readFailed': '读取日志失败',
       'create.title': '新建测试实例',
+      'create.noSupported': '当前工作区没有支持 -Pinstance 隔离的工程；普通工程只能用默认 run/。',
       'create.project': '所属工程',
       'create.name': '实例名',
       'create.namePlaceholder': '例如 dev2、测试B',
@@ -443,6 +446,8 @@ window.__ModuleLoader__.load({
       'notice.autoSwitch': 'No instances in this workspace; switched to “{name}”',
       'project.instances': '{count} instances',
       'instance.default': 'default',
+      'instance.defaultOnly': 'default run only',
+      'instance.defaultOnlyHint': 'This project has no -Pinstance isolation; only the default run/ is available. Add isolation to build.gradle to create more instances.',
       'instance.never': 'Never launched',
       'instance.running': 'Running',
       'instance.starting': 'Starting',
@@ -527,6 +532,7 @@ window.__ModuleLoader__.load({
       'logs.followHint': 'Reads the last 220 lines every 2 seconds.',
       'logs.readFailed': 'Could not read the log',
       'create.title': 'New test instance',
+      'create.noSupported': 'No project in this workspace supports -Pinstance isolation; plain projects only expose the default run/.',
       'create.project': 'Project',
       'create.name': 'Instance name',
       'create.namePlaceholder': 'e.g. dev2, testB',
@@ -992,7 +998,11 @@ window.__ModuleLoader__.load({
         h('div', { className: 'mc-card-body' },
           h('div', { className: 'mc-card-top' },
             h('span', { className: 'mc-name', title }, title),
-            instance.name === '' ? h('span', { className: 'mc-default-tag' }, t('instance.default')) : null),
+            instance.name === '' ? h('span', { className: 'mc-default-tag' }, t('instance.default')) : null,
+            instance.supportsInstance === false ? h('span', {
+              className: 'mc-default-tag',
+              title: t('instance.defaultOnlyHint'),
+            }, t('instance.defaultOnly')) : null),
           h('div', { className: 'mc-sub', title: instance.projectRelPath }, instance.runConfigName),
           h('div', { className: 'mc-badges' },
             h('span', { className: 'mc-badge loader' }, h('i', { className: 'mc-dot' }), loaderLabelOf(instance.loader)),
@@ -1553,8 +1563,7 @@ window.__ModuleLoader__.load({
         // 新建实例
         const initialCreate = () => {
           const allProjects = data?.projects ?? [];
-          const supported = allProjects.filter((p) => p.supportsInstance);
-          const projects = supported.length > 0 ? supported : allProjects;
+          const projects = allProjects.filter((p) => p.supportsInstance);
           const first = projects[0];
           setModal({
             kind: 'create',
@@ -1757,23 +1766,26 @@ window.__ModuleLoader__.load({
 
         const createModal = () => {
           const allProjects = data?.projects ?? [];
-          const supported = allProjects.filter((p) => p.supportsInstance);
-          const projects = supported.length > 0 ? supported : allProjects;
+          const projects = allProjects.filter((p) => p.supportsInstance);
+          const noSupported = projects.length === 0;
           return h(Modal, {
             title: t('create.title'),
             closeLabel: t('misc.close'),
             onClose: () => { if (!modal.submitting) setModal(null); },
             footer: [
               h('button', { key: 'cancel', type: 'button', className: 'mc-btn', onClick: () => setModal(null), disabled: modal.submitting }, t('actions.cancel')),
-              h('button', { key: 'ok', type: 'button', className: 'mc-btn primary', onClick: submitCreate, disabled: modal.submitting || modal.name.trim() === '' }, modal.submitting ? t('create.creating') : t('create.submit')),
+              h('button', { key: 'ok', type: 'button', className: 'mc-btn primary', onClick: submitCreate, disabled: modal.submitting || noSupported || modal.name.trim() === '' }, modal.submitting ? t('create.creating') : t('create.submit')),
             ],
           },
           h('label', { className: 'mc-field' },
             h('span', null, t('create.project')),
             h('select', {
-              className: 'mc-select', value: modal.project,
+              className: 'mc-select', value: modal.project, disabled: noSupported,
               onChange: (event) => setModal({ ...modal, project: event.target.value }),
-            }, projects.map((project) => h('option', { key: project.relPath, value: project.relPath }, `${project.relPath} · ${loaderLabelOf(project.loader)} ${project.mcVersion || ''}`)))),
+            }, noSupported
+              ? h('option', { value: '' }, t('create.noSupported'))
+              : projects.map((project) => h('option', { key: project.relPath, value: project.relPath }, `${project.relPath} · ${loaderLabelOf(project.loader)} ${project.mcVersion || ''}`)))),
+          noSupported ? h('div', { className: 'mc-hint', style: { padding: 0 } }, t('create.noSupported')) : null,
           h('label', { className: 'mc-field' },
             h('span', null, t('create.name')),
             h('input', {

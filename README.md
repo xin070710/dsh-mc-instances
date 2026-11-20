@@ -101,6 +101,7 @@ JDK resolution: project `gradle.properties` (`org.gradle.java.home`) → `DSH_MC
 ## Behaviour contract
 
 - **Auto-hide when no nearby instances (configurable).** On by default. The scan covers the current workspace (including subdirectories) and its direct parent; when neither has an MC project/instance, the session-header MC instances button and the MC instances card on the right-sidebar guide both disappear, and the panel stops auto-switching to other workspaces. Press **Ctrl+Alt+M** (⌘⌥M on macOS) to open the panel while every entry is hidden, then turn auto-hide off from the gear “MC instance settings.” The setting is saved in this browser / desktop profile.
+- **Plain projects are recognized too.** A standard Minecraft project without `-Pinstance` isolation still appears with its default `run/` instance; it just cannot create additional isolated instances. Projects that ship only `gradlew` (no `.bat`) try Git Bash on Windows.
 - **Never edits your build scripts.** It only reads `build.gradle` to detect loader/version/JDK; writes happen in `run/` and `.idea/runConfigurations/`.
 - **Never deletes mod files on disable** — it renames them.
 - **The default `run/` instance cannot be deleted**, and a running instance is never deleted.
